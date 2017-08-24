@@ -145,6 +145,39 @@ result = t + 1  # Now when result is evaluated the value of `t` will be printed.
 \end{python}
 当你计算result你将计算result依赖的每个结果，因为result依赖于t，然后计算t，打印它的输入，t被打印。
 \subsection{Variable}
+Tensorflow变量是最好的在你的程序用表现共享，永久状态的方法，Vaiables通过tf.Variable类操作。一个Tf.Variable代表随着在它上面的操作的进行他的值可能被改变
+和tf.Tensor不同在于tf.Variable存在于session.run之外。一个tf.vaiable存储永久tensor，制定操作允许你读和修改他的值修改能通过多个tf.Session可视化，因此多个worker对于同一个tf.Variable可以查看到同样的值。
+\subsection{创建变量}
+创建变量最好的方法是调用tf.get\_variable函数。这个函数要求你指定变量的名字，名字将作为副本访问相同的变量，和checkpointing和导入模型是变量的名字一样。tf.get\_variable也允许你重用一个先前创建的有同样名字的变量，使得定义重用层很方便。
+创建变量提供名字和形状。
+\begin{python}
+	my_variable = tf.get_variable("my_variable",[1,2,3])
+\end{python}
+上面代码创建了一个3维tensor变量my\_variable，它的形状为[1,2,3],默认数据类型为tf.float32,通过随机tf.glorot\_uniform\_initializer初始化值。
+你也可以指定dtype和初始化方式。
+\begin{python}
+	my_variable = tf.get_variable("my_int_variable",[1,2,3],dtype=tf.int32,initializer=tf.zeros_initializer)
+\end{python}
+TensorFlow提供很一些方便的初始化器，你也可以通过有值的tf.Tensor初始化一个tf.Variable。
+\begin{python}
+	other_variable = tf.get_variable("other_variable",dtype=tf.int32,initializer=tf.constant([23,42]))
+\end{python}
+鼠疫当你用tf.Tensor作为初始化器你不要制定变量的形状，因为初始化器用你的Ttensor的形状。
+\subsection{变量集合}
+因为断开一部分TensorFlow程序也许是想创建变量，这有时候是一个简单的访问他们的方法。因此TensorFlow提供了collections(集合)代表有名字的tensor列表或者其他对象，向tf.Variable实体。
+
+默认每个tf.Variable被放在下面的两个collections：tf.Graphkeys.Global\_VARIABLE（可以被多个设备共享的变量）,tf.Graphkeys.TRAINABLE\_VARIABLE（TensorFlow将计算梯度的变量）。如果你不想一个变量被训练，将它增加到tf.GraphKeys.LOCAL\_VARIABLE集合。例如下面的代码段展示了如何增加一个my\_local变量到这个集合。
+\begin{python}
+my_local = tf.get_variable("my_local",shape=()),collections=[tf.GraphKey.LOCAL_VARIABLE]
+\end{python}
+你也可以指定trainable=Fale。
+\begin{python}
+my_non_trainable = tf.get_variable("my_non_variable",shape=(),trainable=False)
+\end{python}
+你也可以用你自己的collections.任何字符串都是一个可用的集合的名字，不需要明确的创建集合。增加一个变量(或者任何对象)到集合后创建变量，调用tf.add\_to\_collection。例如，你可以用下面的代码增加一个已经存在的变量my\_local到一个my\_collection\_name集合:
+\begin{python}
+	tf.add_to_collection("my_collection_name",my_local)
+\end{python}
 \begin{python}
 #tensorflow 1.2.1
 import tensorflow as tf
